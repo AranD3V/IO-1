@@ -17,13 +17,15 @@ app.get('/', (req, res) => {
 
 const backEndPlayers = {}
 
+const SPEED = 10
 
 io.on('connection', (socket) => {
     console.log('a user connected');
     backEndPlayers[socket.id] = {
         x: 1540  * Math.random(),
         y: 750 * Math.random(),
-        color: `hsl(${360*Math.random()}, 100%, 50%)`
+        color: `hsl(${360*Math.random()}, 100%, 50%)`,
+        sequenceNumber: 0
     }
 
     io.emit('updatePlayers', backEndPlayers)
@@ -33,19 +35,20 @@ io.on('connection', (socket) => {
         delete backEndPlayers[socket.id]
         io.emit('updatePlayers', backEndPlayers)
     })
-    socket.on('keydown', (keycode)=> {
+    socket.on('keydown', ({keycode, sequenceNumber })=> {
+        backEndPlayers[socket.id].sequenceNumber = sequenceNumber
         switch(keycode){
             case 'KeyW':
-            backEndPlayers[socket.id].y -=5
+              backEndPlayers[socket.id].y -=SPEED
               break
             case 'KeyA':
-              backEndPlayers[socket.id].x -=5
+              backEndPlayers[socket.id].x -=SPEED
               break
             case 'KeyS':
-              backEndPlayers[socket.id].y +=5
+              backEndPlayers[socket.id].y +=SPEED
               break
             case 'KeyD':
-              backEndPlayers[socket.id].x +=5
+              backEndPlayers[socket.id].x +=SPEED
               break
           }
     console.log(backEndPlayers)

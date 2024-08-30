@@ -16,9 +16,11 @@ app.get('/', (req, res) => {
 })
 
 const backEndPlayers = {}
+const backEndProjectiles = {}
 
 const SPEED = 10
-
+let projectileId = 0
+ 
 io.on('connection', (socket) => {
     console.log('a user connected');
     backEndPlayers[socket.id] = {
@@ -29,6 +31,23 @@ io.on('connection', (socket) => {
     }
 
     io.emit('updatePlayers', backEndPlayers)
+
+    socket.on('shoot', ({x, y, angle}) =>{
+      projectileId++;
+
+      const velocity = {
+        x: Math.cos(angle) * 10,
+        y: Math.sin(angle) * 10
+      }
+
+      backEndProjectiles[projectileId] = {
+        x,
+        y, 
+        velocity,
+        playerId: socket.id
+      }
+      console.log(backEndProjectiles)
+    })
 
     socket.on('disconnect', (reason) =>{
         console.log(reason)
@@ -54,6 +73,8 @@ io.on('connection', (socket) => {
     console.log(backEndPlayers)
   })
 
+
+  //backend ticker
   setInterval(() => {
     io.emit('updatePlayers', backEndPlayers)
   },15)

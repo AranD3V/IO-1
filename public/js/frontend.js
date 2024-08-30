@@ -15,7 +15,7 @@ const y = canvas.height / 2
 
 
 const frontEndPlayers = {}
-
+const frontEndProjectiles = []
 
 socket.on('updatePlayers', (backEndPlayers)=>{
   for (const id in backEndPlayers){
@@ -41,7 +41,7 @@ socket.on('updatePlayers', (backEndPlayers)=>{
         playerInputs.splice(0, lastBAckendInputIndex + 1)
       
       playerInputs.forEach(input =>{
-        fromEndPlayers[id].x += input.dx 
+        frontEndPlayers[id].x += input.dx 
       })
     } else{
       frontEndPlayers[id].x= backEndPlayer.x
@@ -75,6 +75,14 @@ function animate() {
   for (const id in frontEndPlayers){
     const frontEndPlayer = frontEndPlayers[id]
     frontEndPlayer.draw()
+  }
+  for (const id in frontEndPlayers){
+    const frontEndPlayer = frontEndPlayers[id]
+    frontEndPlayer.draw()
+  }
+  for (let i = frontEndProjectiles.length - 1; i >= 0; i--){
+    const frontEndProjectile = frontEndProjectiles[i]
+    frontEndProjectile.update()
   }
 
 }

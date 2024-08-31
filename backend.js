@@ -36,8 +36,8 @@ io.on('connection', (socket) => {
       projectileId++;
 
       const velocity = {
-        x: Math.cos(angle) * 10,
-        y: Math.sin(angle) * 10
+        x: Math.cos(angle) * 5,
+        y: Math.sin(angle) * 5
       }
 
       backEndProjectiles[projectileId] = {
@@ -76,8 +76,14 @@ io.on('connection', (socket) => {
 
   //backend ticker
   setInterval(() => {
+    for (const id in backEndProjectiles){
+      backEndProjectiles[id].x += backEndProjectiles[id].velocity.x
+      backEndProjectiles[id].y += backEndProjectiles[id].velocity.y
+    }
+    io.emit('updateProjectiles', backEndProjectiles)
     io.emit('updatePlayers', backEndPlayers)
   },15)
+
     
     })
 

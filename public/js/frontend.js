@@ -17,6 +17,10 @@ const y = canvas.height / 2
 const frontEndPlayers = {}
 const frontEndProjectiles = {}
 
+socket.on('connect', () => {
+  socket.emit('initCanvas', {width: canvas.width, height: canvas.height})
+})
+
 socket.on('updateProjectiles', (backEndProjectiles)=>{
   for(const id in backEndProjectiles){
     const backEndProjectile = backEndProjectiles[id]
@@ -33,6 +37,12 @@ socket.on('updateProjectiles', (backEndProjectiles)=>{
     } else{
       frontEndProjectiles[id].x += backEndProjectiles[id].velocity.x
       frontEndProjectiles[id].y += backEndProjectiles[id].velocity.y
+    }
+  }
+
+  for (const frontEndProjectileId in frontEndProjectiles){
+    if(!backEndProjectiles[frontEndProjectileId]){
+      delete frontEndProjectiles[frontEndProjectileId]
     }
   }
 })
@@ -67,7 +77,7 @@ socket.on('updatePlayers', (backEndPlayers)=>{
       frontEndPlayers[id].x= backEndPlayer.x
       frontEndPlayers[id].y= backEndPlayer.y
 
-      getStaticPaths,to(frontEndPlayers[id], {
+      getStaticProps.to(frontEndPlayers[id], {
         x: backEndPlayer.x,
         y: backEndPlayer.y,
         duration : 0.015,

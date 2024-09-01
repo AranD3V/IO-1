@@ -30,9 +30,7 @@ io.on('connection', (socket) => {
         color: `hsl(${360*Math.random()}, 100%, 50%)`,
         sequenceNumber: 0
     }
-
     io.emit('updatePlayers', backEndPlayers)
-
     socket.on('initCanvas',({width, height, devicePixelRatio}) => {
       backEndPlayers[socket.id].canvas = {
         width,
@@ -42,13 +40,10 @@ io.on('connection', (socket) => {
             
       if(devicePixelRatio > 1){
         backEndPlayers[socket.id].radius= 2 * RADIUS
-
       }
     })
-
     socket.on('shoot', ({x, y, angle}) =>{
       projectileId++;
-
       const velocity = {
         x: Math.cos(angle) * 5,
         y: Math.sin(angle) * 5
@@ -62,7 +57,6 @@ io.on('connection', (socket) => {
       }
       console.log(backEndProjectiles)
     })
-
     socket.on('disconnect', (reason) =>{
         console.log(reason)
         delete backEndPlayers[socket.id]
@@ -86,14 +80,11 @@ io.on('connection', (socket) => {
           }
     console.log(backEndPlayers)
   })
-
-
   //backend ticker
   setInterval(() => {
     for (const id in backEndProjectiles){
       backEndProjectiles[id].x += backEndProjectiles[id].velocity.x
       backEndProjectiles[id].y += backEndProjectiles[id].velocity.y
-
       const PROJECTILE_RADIUS = 5
       if(backEndProjectiles[id].x - PROJECTILE_RADIUS >= backEndPlayers[backEndProjectiles[id].playerId]?.canvas?.width
         || backEndProjectiles[id].x - PROJECTILE_RADIUS <= 0
@@ -105,34 +96,24 @@ io.on('connection', (socket) => {
       }
       for(const playerId in backEndPlayers){
         const backEndPlayer = backEndPlayers[playerId]
-        
         const DISTANCE = Math.hypot(
           backEndProjectiles[id].x - backEndPlayer.x,
           backEndProjectiles[id].y - backEndPlayer.y
           )
-
           if(DISTANCE < PROJECTILE_RADIUS + backEndPlayer.radius && backEndProjectiles[id].playerId !== playerId){
             delete backEndProjectiles[id]
             delete backEndPlayers[playerId]
             break
           }
-
-
-
           console.log(DISTANCE)
         }
       console.log(backEndProjectiles)
     }
     io.emit('updateProjectiles', backEndProjectiles)
-    
     io.emit('updatePlayers', backEndPlayers)
   },15)
-
-    
     })
-
 server.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
-
 console.log('server loaded')

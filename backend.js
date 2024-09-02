@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 const backEndPlayers = {}
 const backEndProjectiles = {}
 
-const SPEED = 10
+const SPEED = 5
 const RADIUS = 10
 let projectileId = 0
  
@@ -105,15 +105,14 @@ io.on('connection', (socket) => {
 
           // collision detection
           if(DISTANCE < PROJECTILE_RADIUS + backEndPlayer.radius && backEndProjectiles[id].playerId !== playerId){
-            backEndPlayers[backEndProjectiles[id].playerId].score++
+            if(backEndPlayers[backEndProjectiles[id].playerId])
+              backEndPlayers[backEndProjectiles[id].playerId].score++
             console.log(backEndPlayers[backEndProjectiles[id].playerId])
             delete backEndProjectiles[id]
             delete backEndPlayers[playerId]
             break
           }
-          console.log(DISTANCE)
         }
-      console.log(backEndProjectiles)
     }
     io.emit('updateProjectiles', backEndProjectiles)
     io.emit('updatePlayers', backEndPlayers)

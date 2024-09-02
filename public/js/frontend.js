@@ -64,8 +64,28 @@ socket.on('updatePlayers', (backEndPlayers)=>{
         color:backEndPlayer.color
       })
 
-      document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}">${id}: 0</div>`
+      document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}" data-score="${backEndPlayer.score}">${id}: ${backEndPlayer.score}</div>`
     } else{
+
+      document.querySelector(`div[data-id="${id}"]`).innerHTML =  `${id}: ${backEndPlayer.score}`
+      document.querySelector(`div[data-id="${id}]`).setAttribute('data-score', backEndPlayer.score)
+      const parentDiv= document.querySelector('#playerLabels')
+      const childDivs = Array.from(parentDiv.querySelectorAll('div'))
+      childDivs.sort((a,b) =>{
+        const scoreA = (a.getAttributr('data-score'))
+        const scoreB = (b.getAttributr('data-score'))
+        return scoreA=scoreB
+      })
+
+      childDivs.forEach(div =>{
+        parentDiv.removeChild(div)
+      })
+
+      childDivs.forEach(div =>{
+        parentDiv.appendChild(div)
+      })
+
+
       if( id === socket.id){
       // if a player already exists
       frontEndPlayers[id].x= backEndPlayer.x

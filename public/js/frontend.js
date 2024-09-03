@@ -239,3 +239,8 @@ window.addEventListener('keyup', (event) => {
   }
 
 })
+
+document.querySelector('#usernameForm').addEventListener('submit', (event) => {
+  event.preventDefault()
+  socket.emit('initGame', document.querySelector('#usernameInput').value)
+})

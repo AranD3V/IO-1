@@ -23,6 +23,7 @@ const RADIUS = 10
 const PROJECTILE_RADIUS = 5
 let projectileId = 0
 
+//connection
 io.on('connection', (socket) => {
   console.log('a user connected')
 

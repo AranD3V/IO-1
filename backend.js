@@ -68,7 +68,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', (reason) => {
     console.log(reason)
+    //clearInterval(interval)
     delete backEndPlayers[socket.id]
+    
     io.emit('updatePlayers', backEndPlayers)
   })
 
@@ -119,72 +121,49 @@ io.on('connection', (socket) => {
 const TICK_INTERVAL = 15; // Base interval
 const CHUNK_SIZE = 50; // Number of projectiles to process per timeout
 
-setInterval(() => {
-  const projectileIds = Object.keys(backEndProjectiles);
-  const totalProjectiles = projectileIds.length;
-  let processed = 0;
+const interval = setInterval(() => {
+  for (const id in backEndProjectiles) {
+    const projectile = backEndProjectiles[id];
+    const playerCanvas = backEndPlayers[projectile.playerId]?.canvas;
 
-  function processChunk() {
-    const updatedProjectiles = {};
+    projectile.x += projectile.velocity.x;
+    projectile.y += projectile.velocity.y;
 
-    for (let i = 0; i < CHUNK_SIZE && processed < totalProjectiles; i++, processed++) {
-      const id = projectileIds[processed];
-      const projectile = backEndProjectiles[id];
-      const playerCanvas = backEndPlayers[projectile.playerId]?.canvas;
-
-      // Update positions
-      projectile.x += projectile.velocity.x;
-      projectile.y += projectile.velocity.y;
-
-      // Boundary check
-      if (
-        projectile.x - PROJECTILE_RADIUS >= playerCanvas?.width ||
-        projectile.x + PROJECTILE_RADIUS <= 0 ||
-        projectile.y - PROJECTILE_RADIUS >= playerCanvas?.height ||
-        projectile.y + PROJECTILE_RADIUS <= 0
-      ) {
-        delete backEndProjectiles[id];
-        continue;
-      }
-
-      // Collision detection
-      const squaredRadius = PROJECTILE_RADIUS * PROJECTILE_RADIUS;
-      for (const playerId in backEndPlayers) {
-        const backEndPlayer = backEndPlayers[playerId];
-        const dx = projectile.x - backEndPlayer.x;
-        const dy = projectile.y - backEndPlayer.y;
-        const squaredDistance = dx * dx + dy * dy;
-
-        if (
-          squaredDistance < squaredRadius + backEndPlayer.radius * backEndPlayer.radius &&
-          projectile.playerId !== playerId
-        ) {
-          if (backEndPlayers[projectile.playerId])
-            backEndPlayers[projectile.playerId].score++;
-
-          delete backEndProjectiles[id];
-          delete backEndPlayers[playerId];
-          break;
-        }
-      }
-
-      updatedProjectiles[id] = projectile;
+    // Boundary check
+    if (
+      projectile.x - PROJECTILE_RADIUS >= playerCanvas?.width ||
+      projectile.x + PROJECTILE_RADIUS <= 0 ||
+      projectile.y - PROJECTILE_RADIUS >= playerCanvas?.height ||
+      projectile.y + PROJECTILE_RADIUS <= 0
+    ) {
+      delete backEndProjectiles[id];
+      continue;
     }
 
-    // Emit updates after processing all chunks
-    if (processed >= totalProjectiles) {
-      io.emit('updateProjectiles', updatedProjectiles);
-      io.emit('updatePlayers', backEndPlayers);
-    } else {
-      // Schedule the next chunk
-      setTimeout(processChunk, 0);
+    // Collision detection
+    for (const playerId in backEndPlayers) {
+      const backEndPlayer = backEndPlayers[playerId];
+      const dx = projectile.x - backEndPlayer.x;
+      const dy = projectile.y - backEndPlayer.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (
+        distance < PROJECTILE_RADIUS + backEndPlayer.radius &&
+        projectile.playerId !== playerId
+      ) {
+        if (backEndPlayers[projectile.playerId])
+          backEndPlayers[projectile.playerId].score++;
+
+        delete backEndProjectiles[id];
+        delete backEndPlayers[playerId];
+        break;
+      }
     }
   }
 
-  // Start processing chunks
-  processChunk();
+  io.emit('updateProjectiles', backEndProjectiles);
+  io.emit('updatePlayers', backEndPlayers);
 }, TICK_INTERVAL);
-
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

@@ -1,6 +1,7 @@
 addEventListener('click', (event) => {
   const canvas = document.querySelector('canvas')
   const { top, left } = canvas.getBoundingClientRect()
+  if (!frontEndPlayers[socket.id]) return
   const playerPosition = {
     x: frontEndPlayers[socket.id].x,
     y: frontEndPlayers[socket.id].y

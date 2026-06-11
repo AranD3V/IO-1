@@ -118,6 +118,10 @@ socket.on('updatePlayers', (backEndPlayers) => {
 
       if (id === socket.id) {
         document.querySelector('#usernameForm').style.display = 'block'
+
+        // reset input state so held keys don't carry into the next life
+        for (const key in keys) keys[key].pressed = false
+        playerInputs.length = 0
       }
 
       delete frontEndPlayers[id]
@@ -229,8 +233,6 @@ window.addEventListener('keydown', (event) => {
 })
 
 window.addEventListener('keyup', (event) => {
-  if (!frontEndPlayers[socket.id]) return
-
   switch (event.code) {
     case 'KeyW':
       keys.w.pressed = false

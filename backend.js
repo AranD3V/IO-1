@@ -30,6 +30,8 @@ io.on('connection', (socket) => {
   io.emit('updatePlayers', backEndPlayers)
 
   socket.on('shoot', ({ x, y, angle }) => {
+    if (!backEndPlayers[socket.id]) return
+
     projectileId++
 
     const velocity = {
@@ -64,13 +66,14 @@ io.on('connection', (socket) => {
     }
 
     backEndPlayers[socket.id].radius = RADIUS
+
+    startTicker()
   })
 
   socket.on('disconnect', (reason) => {
     console.log(reason)
-    //clearInterval(interval)
     delete backEndPlayers[socket.id]
-    
+
     io.emit('updatePlayers', backEndPlayers)
   })
 
@@ -119,21 +122,39 @@ io.on('connection', (socket) => {
 
 // backend ticker
 const TICK_INTERVAL = 15; // Base interval
-const CHUNK_SIZE = 50; // Number of projectiles to process per timeout
 
-const interval = setInterval(() => {
+let tickInterval = null
+
+function startTicker() {
+  if (tickInterval) return
+  tickInterval = setInterval(tick, TICK_INTERVAL)
+}
+
+function stopTicker() {
+  clearInterval(tickInterval)
+  tickInterval = null
+}
+
+function tick() {
   for (const id in backEndProjectiles) {
     const projectile = backEndProjectiles[id];
     const playerCanvas = backEndPlayers[projectile.playerId]?.canvas;
+
+    // owner died or disconnected — without their canvas the boundary
+    // check below can never despawn this projectile
+    if (!playerCanvas) {
+      delete backEndProjectiles[id];
+      continue;
+    }
 
     projectile.x += projectile.velocity.x;
     projectile.y += projectile.velocity.y;
 
     // Boundary check
     if (
-      projectile.x - PROJECTILE_RADIUS >= playerCanvas?.width ||
+      projectile.x - PROJECTILE_RADIUS >= playerCanvas.width ||
       projectile.x + PROJECTILE_RADIUS <= 0 ||
-      projectile.y - PROJECTILE_RADIUS >= playerCanvas?.height ||
+      projectile.y - PROJECTILE_RADIUS >= playerCanvas.height ||
       projectile.y + PROJECTILE_RADIUS <= 0
     ) {
       delete backEndProjectiles[id];
@@ -163,7 +184,16 @@ const interval = setInterval(() => {
 
   io.emit('updateProjectiles', backEndProjectiles);
   io.emit('updatePlayers', backEndPlayers);
-}, TICK_INTERVAL);
+
+  // nothing left to simulate — this tick already broadcast the empty
+  // state, so clients are clear and the loop can go quiet
+  if (
+    Object.keys(backEndPlayers).length === 0 &&
+    Object.keys(backEndProjectiles).length === 0
+  ) {
+    stopTicker()
+  }
+}
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
